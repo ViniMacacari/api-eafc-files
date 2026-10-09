@@ -1,0 +1,4 @@
+* text=auto eol=lf
+templates/**/*.db binary
+templates/**/*.xml -text
+templates/FIFA.xml -text
