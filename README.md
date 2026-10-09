@@ -1,6 +1,6 @@
 # api-eafc-files
 
-A TypeScript API for reading EA FC squads, career saves, and databases as JSON-compatible objects. XML descriptors and database templates are bundled in `templates/`. Input files are opened in read-only mode. The library does not start a server.
+A TypeScript API for reading EA FC squads, career saves, and databases as JSON-compatible objects. XML descriptors and database templates are bundled in `templates/`. Input files are opened in read-only mode.
 
 ## Setup
 
