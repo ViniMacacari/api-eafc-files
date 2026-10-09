@@ -1,0 +1,109 @@
+{
+  "date": "2026-10-09",
+  "node": "v24.15.0",
+  "resources": [
+    {
+      "id": "fc25-main",
+      "version": "FC 25",
+      "database": "main",
+      "path": "templates/FC 25/fifa_ng_db.db",
+      "xmlPath": "templates/FC 25/fifa_ng_db-meta.xml",
+      "byteLength": 30322180,
+      "sha256": "7f2b61bbaa2f6a910b8b38face41323c852b9a89f44990a9099d69cda0c093f9",
+      "metadataSha256": "99f5f93977cd9c792ceb0ff5d0db1e442240f3f2a5f15d9de473baef5a7a7faf",
+      "tables": 242,
+      "records": 276444,
+      "metadataComplete": true,
+      "warnings": 0
+    },
+    {
+      "id": "fc25-fut",
+      "version": "FC 25",
+      "database": "fut",
+      "path": "templates/FC 25/FUT/cards_ng_db.db",
+      "xmlPath": "templates/FC 25/FUT/cards_ng_db-meta.xml",
+      "byteLength": 30172220,
+      "sha256": "a1a0482a930049a1f33628a09531a4989446bffb1bf7867d524e31734ff39698",
+      "metadataSha256": "fb44a3427f24aba6c6e3b1e1bbceb3d12941636f83f78e104403eba6464969c7",
+      "tables": 210,
+      "records": 250814,
+      "metadataComplete": true,
+      "warnings": 0
+    },
+    {
+      "id": "fc25-loc",
+      "version": "FC 25",
+      "database": "localization",
+      "path": "templates/FC 25/loc/eng_us.db",
+      "xmlPath": "templates/FC 25/loc/eng_us-meta.xml",
+      "byteLength": 6874244,
+      "sha256": "191441276a03f471759f258595d05eb7b30eba71f3952462606c311f4b3b1a0b",
+      "metadataSha256": "e9caace24fcdce0d76b129f7e7eb87b4b58e4564579eba6a31ed8547445ac68d",
+      "tables": 2,
+      "records": 95376,
+      "metadataComplete": true,
+      "warnings": 0
+    },
+    {
+      "id": "fc26-main",
+      "version": "FC 26",
+      "database": "main",
+      "path": "templates/FC 26/fifa_ng_db.db",
+      "xmlPath": "templates/FC 26/fifa_ng_db-meta.xml",
+      "byteLength": 38563852,
+      "sha256": "8f18196a8204ae1af39b4a8f00db1a90d6d165847cb4bcc771caf6e3cdf95fdc",
+      "metadataSha256": "e78f75a51315ef3d8c512e2ce70c682eec54a959901a1ecf77429a65e9e3a946",
+      "tables": 279,
+      "records": 337434,
+      "metadataComplete": true,
+      "warnings": 0
+    },
+    {
+      "id": "fc26-fut",
+      "version": "FC 26",
+      "database": "fut",
+      "path": "templates/FC 26/FUT/cards_ng_db.db",
+      "xmlPath": "templates/FC 26/FUT/cards_ng_db-meta.xml",
+      "byteLength": 38118380,
+      "sha256": "4cbbe7c0d8836d8a5b9bf50598d0bbdc8ea33520b0cb1e2312fe234838d81620",
+      "metadataSha256": "d803500bac6ee29acfec7eb55f93d35e7fb2d5bd2167b8698981adfa8a31cc1f",
+      "tables": 244,
+      "records": 308211,
+      "metadataComplete": true,
+      "warnings": 0
+    },
+    {
+      "id": "fc26-loc",
+      "version": "FC 26",
+      "database": "localization",
+      "path": "templates/FC 26/loc/eng_us.db",
+      "xmlPath": "templates/FC 26/loc/eng_us-meta.xml",
+      "byteLength": 7273216,
+      "sha256": "75874c0212bf32d6ed7bab1385bec66107a84d267f47074afa936ec8e3d65fad",
+      "metadataSha256": "e9caace24fcdce0d76b129f7e7eb87b4b58e4564579eba6a31ed8547445ac68d",
+      "tables": 2,
+      "records": 100057,
+      "metadataComplete": true,
+      "warnings": 0
+    }
+  ],
+  "auxiliaryFiles": [
+    {
+      "path": "templates/FIFA.xml",
+      "byteLength": 61767,
+      "sha256": "a37fb7e803b713f5f85185743e021ebe3adba12431952fb50a1b5e60a5464920"
+    }
+  ],
+  "check": {
+    "command": "npm run check",
+    "tests": 33,
+    "passed": 33,
+    "failed": 0,
+    "skipped": 0
+  },
+  "packageCheck": {
+    "command": "npm pack --dry-run --json",
+    "importedTemplateFiles": 13,
+    "allTemplatesIncluded": true
+  }
+}
