@@ -2,7 +2,7 @@
   "name": "api-eafc-files",
   "version": "1.0.0",
   "private": true,
-  "description": "TypeScript API for reading EA FC squad and career saves without a server.",
+  "description": "TypeScript API for reading and writing EA FC squad and career saves without a server.",
   "type": "module",
   "engines": {
     "node": ">=24.0.0"
@@ -16,6 +16,7 @@
   "files": [
     "dist",
     "templates",
+    "examples",
     "README.md",
     "docs"
   ],
@@ -24,7 +25,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "npm run build && node --test --test-concurrency=1 test/*.test.mjs",
     "check": "npm run typecheck && npm test",
-    "read": "node examples/read-file.mjs"
+    "read": "node examples/read-file.mjs",
+    "write": "node examples/write-file.mjs"
   },
   "dependencies": {
     "fast-xml-parser": "5.11.2"
