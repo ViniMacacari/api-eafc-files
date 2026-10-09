@@ -66,10 +66,18 @@ The tree is limited to 256 nodes and checked for cycles and invalid child refere
 - Database boundaries, tables, fields, pointers, and decoding budgets are validated.
 - Unwritten slots and cancelled records are omitted.
 - Missing descriptors produce short codes and raw integer values with warnings.
-- CRCs are exposed but are not recalculated or validated.
+- Reading exposes CRCs without validating them. Writing recalculates database and table CRCs for changed databases.
 - Areas outside DB databases are not interpreted.
 - Encrypted or externally compressed containers are not decoded.
 - Table filtering validates the directory and decodes selected tables only.
 - `source.kind` classifies filenames; it does not reliably detect game mode or version.
 
 The JSON result describes recognized structured databases rather than every byte of the input file.
+
+## Writing
+
+The writer uses the original binary and selected table records. Database and table headers retain reserved bytes and field-descriptor order. Integer bits are updated at their explicit offsets, preserving gaps; floats and pointers use database byte order. Compressed strings receive a new Huffman tree, and long-string length prefixes use the opposite byte order. String pools are padded to an eight-byte boundary before the table body CRC.
+
+Database CRCs use polynomial `0x04C11DB7`, initial value `0xFFFFFFFF`, no reflection, and no final XOR. Header coverage is the first 20 database bytes or 32 table bytes. Directory coverage excludes its trailing CRC. Table-body coverage begins after the header CRC and ends before the final body CRC.
+
+Standalone databases may resize. Embedded databases retain their original byte allocations and absolute offsets, preserving other save structures. Known `FBCHUNKS` integrity areas can be invalidated after edits. See [writing](writing.md) for allocation, preservation, and validation rules.

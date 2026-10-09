@@ -2,6 +2,8 @@
 
 `readEaFile` and `parseEaFile` return objects, arrays, strings, finite numbers, booleans, and `null`. Results contain no `Buffer`, `BigInt`, `Map`, or record class instances.
 
+This contract can also be passed to `serializeEaFile` or `writeEaFile` after editing records. Preserve field descriptors and the source envelope. The original binary is required to retain data outside the JSON contract. See [writing](writing.md) for examples and source compatibility rules. The writer does not update bookkeeping properties in the supplied object; read the output to obtain current offsets and counts.
+
 ```json
 {
   "formatVersion": 1,

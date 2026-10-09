@@ -1,6 +1,6 @@
 # api-eafc-files
 
-A TypeScript API for reading EA FC squads, career saves, and databases as JSON-compatible objects. XML descriptors and database templates are bundled in `templates/`. Input files are opened in read-only mode.
+A TypeScript API for reading and writing EA FC squads, career saves, and databases through JSON-compatible objects. XML descriptors and database templates are bundled in `templates/`. Reading opens inputs in read-only mode; writing creates a new output unless replacement is explicitly requested. The library does not start a server.
 
 ## Setup
 
@@ -96,6 +96,32 @@ const data = parseEaFile(bytes, { metadata, fileName: 'file.squad' });
 
 For custom descriptors, use `parseMetadataXml(xml)` and pass the result as `metadata`, without `version`. External XML paths are not accepted by the file-reading API. Without `version` or `metadata`, records use short codes and raw integer values, accompanied by `MISSING_METADATA` warnings.
 
+## Edit and write a file
+
+```ts
+import { readEaFile, writeEaFile } from './api-eafc-files/dist/index.js';
+
+const source = 'C:/saves/file.squad';
+const data = await readEaFile(source, { version: 'FC 26', tables: ['teams'] });
+const teams = data.databases.flatMap(database => database.tables)
+  .find(table => table.name === 'teams');
+const team = teams?.records.find(record => record.teamid === 1);
+if (!team) throw new Error('Team 1 was not found.');
+
+team.teamname = 'Arsenal FC';
+
+const result = await writeEaFile(source, 'C:/saves/edited.squad', data);
+console.log(result.path, result.byteLength);
+```
+
+Career saves use the same write API. Changes can include record edits, additions, deletions, and the container's `inGameName`. Filtered reads are supported: unselected tables and databases are retained from the source binary. The write API uses field names and integer minima already present in `data`, so no additional `version` option is needed.
+
+The original binary is required even when `data` comes from edited JSON. Standalone databases can grow or shrink. Databases inside saves retain their original byte allocations and offsets; edits that exceed an allocation fail before any destination is published. Changed databases have their database and table CRCs recalculated. New UTF-8 symbols receive a rebuilt Huffman tree.
+
+Existing paths are rejected by default. `overwrite: true` explicitly allows replacement, including writing back to the source path. Publication uses a temporary file in the destination directory. Re-read the output before applying a later edit because counts, offsets, and sizes in the input snapshot remain unchanged.
+
+See the [write guide](docs/writing.md) for record insertion and deletion, binary serialization, JSON import, integrity handling, validation rules, filesystem behavior, and compatibility limits.
+
 ## JSON output and export
 
 Results contain serializable objects and arrays. For moderate output sizes:
@@ -131,6 +157,14 @@ node examples/read-file.mjs `
 
 Options: `--version`, `--database`, and `--output`. Without `--output`, JSON is written to stdout. Without a version, the example performs a raw read. Export creates a new file and rejects existing paths. The program exits after reading.
 
+Import an edited JSON snapshot and create a binary file:
+
+```powershell
+npm run write -- "C:/saves/file.squad" edited.json "C:/saves/edited.squad"
+```
+
+The write example also accepts `--overwrite` and `--save-integrity invalidate|preserve`. It prints `{ "path": "...", "byteLength": ... }` after a successful write. JSON must follow the library's [output contract](docs/json-output.md); an array of records by itself is insufficient.
+
 ## Public API and errors
 
 | Function | Return value | Purpose |
@@ -139,10 +173,14 @@ Options: `--version`, `--database`, and `--output`. Without `--output`, JSON is 
 | `readTemplateDatabase(options)` | `Promise<EaFile>` | Read a bundled database |
 | `loadTemplateMetadata(version, database?)` | `Promise<MetadataSchema>` | Load a reusable local descriptor |
 | `parseEaFile(bytes, options?)` | `EaFile` | Decode a `Uint8Array` or `Buffer` |
+| `serializeEaFile(sourceBytes, file, options?)` | `Uint8Array` | Apply edits to source bytes without I/O |
+| `writeEaFile(sourcePath, outputPath, file, options?)` | `Promise<WriteFileResult>` | Serialize and publish a binary file |
 | `parseMetadataXml(xml)` | `MetadataSchema` | Parse custom descriptor XML |
 | `eaFileJsonChunks(file)` | `Generator<string>` | Generate compact JSON in chunks |
 
 `ReadFileOptions` includes `version`, `database`, `metadata`, `tables`, `fileName`, `kind`, and `limits`. `version` and `metadata` are mutually exclusive. `database` requires `version`. `ReadTemplateOptions` requires `version`. `ParseOptions` accepts `metadata` without loading XML files.
+
+`SerializeOptions` includes `limits` and `saveIntegrity`, defaulting to `'invalidate'`. `WriteFileOptions` also includes `overwrite`, defaulting to `false`. The write options do not accept descriptor paths or a version; descriptors come from the read result.
 
 ```ts
 import { EaFileError, readEaFile } from './api-eafc-files/dist/index.js';
@@ -156,7 +194,7 @@ try {
 }
 ```
 
-Errors include `code`, an English `message`, and an absolute byte `offset`, or `null` when no offset applies. Codes: `INVALID_OPTIONS`, `FILE_READ_FAILED`, `INVALID_METADATA`, `INVALID_FORMAT`, `TRUNCATED_FILE`, `UNSUPPORTED_FIELD_TYPE`, `INVALID_COMPRESSED_STRING`, and `LIMIT_EXCEEDED`.
+Errors include `code`, an English `message`, and a byte `offset`, or `null` when no offset applies. Read offsets are absolute positions in the source. Codes: `INVALID_OPTIONS`, `FILE_READ_FAILED`, `FILE_WRITE_FAILED`, `INVALID_WRITE`, `INVALID_METADATA`, `INVALID_FORMAT`, `TRUNCATED_FILE`, `UNSUPPORTED_FIELD_TYPE`, `INVALID_COMPRESSED_STRING`, and `LIMIT_EXCEEDED`.
 
 | Default limit | Value |
 | --- | ---: |
@@ -172,14 +210,14 @@ Override limits with `limits: { maxTotalRecords: 2_000_000 }`. Values must be po
 ## Project structure
 
 - `src/domain/`: contracts, version catalog, errors, and decoding budgets.
-- `src/application/`: file reads, template selection, decoding, and JSON serialization.
-- `src/infrastructure/binary/`: databases, tables, fields, bits, and Huffman decoding.
+- `src/application/`: file reads and writes, template selection, decoding, and serialization.
+- `src/infrastructure/binary/`: databases, tables, fields, bits, Huffman coding, and CRCs.
 - `src/infrastructure/metadata/`: XML parsing and descriptor indexes.
 - `src/infrastructure/templates/`: bundled template path resolution.
-- `src/infrastructure/filesystem/`: read-only file access with `open(path, 'r')`.
+- `src/infrastructure/filesystem/`: read-only source access and atomic output publication.
 - `templates/`: FC 25 and FC 26 descriptors and databases.
 - `test/`: fixtures and integration tests using bundled templates.
 
 The library has no mutable global state or external program dependency. TypeScript enables `strict`, `noUncheckedIndexedAccess`, and `exactOptionalPropertyTypes`. Development references: [TypeScript configuration](https://www.typescriptlang.org/tsconfig/noUncheckedIndexedAccess.html) and [Node.js test runner](https://nodejs.org/api/test.html).
 
-Further documentation: [JSON structure](docs/json-output.md), [binary format](docs/binary-format.md), [templates](templates/README.md), and [validation](docs/validation.md).
+Further documentation: [writing](docs/writing.md), [JSON structure](docs/json-output.md), [binary format](docs/binary-format.md), [templates](templates/README.md), and [validation](docs/validation.md).
