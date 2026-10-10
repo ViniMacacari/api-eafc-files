@@ -27,6 +27,8 @@ templates/
 
 The collection contains six database/XML pairs and the auxiliary `FIFA.xml` file. Database bytes are preserved. XML comments have been removed without changing active descriptor elements. `FIFA.xml` describes auxiliary table references and is not used as a binary descriptor by the reader.
 
+Bundled databases can also be used as source binaries for the [write API](../docs/writing.md). Write to a new destination to keep the bundled files and their checksum inventory unchanged.
+
 `readEaFile(path, { version: 'FC 26' })` selects the main descriptor. `readTemplateDatabase({ version: 'FC 26' })` also reads the matching bundled database. Select FUT or localization with `database: 'fut'` or `'localization'`.
 
 Names and ranges depend on the version. The API cannot automatically detect a save from another version that reuses the same field codes. Use `SUPPORTED_VERSIONS` and `TEMPLATE_DATABASES` to inspect available options.

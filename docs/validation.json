@@ -96,14 +96,32 @@
   ],
   "check": {
     "command": "npm run check",
-    "tests": 33,
-    "passed": 33,
+    "tests": 60,
+    "passed": 60,
     "failed": 0,
     "skipped": 0
   },
   "packageCheck": {
     "command": "npm pack --dry-run --json",
     "importedTemplateFiles": 13,
-    "allTemplatesIncluded": true
+    "allTemplatesIncluded": true,
+    "allExamplesIncluded": true
+  },
+  "writing": {
+    "binaryWriteTests": 26,
+    "jsonImportExampleTests": 1,
+    "fullyDecodedTemplateRoundTrips": 6,
+    "endianness": ["little", "big"],
+    "sourceTemplatesPreserved": true,
+    "saveDatabaseOffsetsPreserved": true,
+    "localSaveSmokeChecks": {
+      "samples": 3,
+      "kinds": ["squad", "online-squad", "career"],
+      "sourceFilesPreserved": true,
+      "fileLengthsPreserved": true,
+      "originalTableCrcChecks": 474,
+      "originalTableCrcMismatches": 0,
+      "inGameLoadingVerified": false
+    }
   }
 }

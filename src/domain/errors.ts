@@ -6,6 +6,8 @@ export type EaFileErrorCode =
   | 'TRUNCATED_FILE'
   | 'UNSUPPORTED_FIELD_TYPE'
   | 'INVALID_COMPRESSED_STRING'
+  | 'INVALID_WRITE'
+  | 'FILE_WRITE_FAILED'
   | 'LIMIT_EXCEEDED';
 
 export class EaFileError extends Error {
