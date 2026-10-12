@@ -12,7 +12,7 @@ npm run build
 npm run check
 ```
 
-The build produces ESM JavaScript and TypeScript declarations in `dist/`. Generated code has no comments. The package includes `dist/` and `templates/`; template paths are resolved relative to the module, independently of the working directory.
+The build produces ESM JavaScript and TypeScript declarations in `dist/`. `dist/` is not committed: the `prepare` script builds it when the package is installed from Git (`npm install github:ViniMacacari/api-eafc-files`). Generated code has no comments. The package includes `dist/` and `templates/`; template paths are resolved relative to the module, independently of the working directory.
 
 ## Read a squad or career save
 
@@ -96,6 +96,20 @@ const data = parseEaFile(bytes, { metadata, fileName: 'file.squad' });
 
 For custom descriptors, use `parseMetadataXml(xml)` and pass the result as `metadata`, without `version`. External XML paths are not accepted by the file-reading API. Without `version` or `metadata`, records use short codes and raw integer values, accompanied by `MISSING_METADATA` warnings.
 
+## Read career standings, fixtures, and competitions
+
+Career saves also keep the live league tables, the season schedule with results, and the competition tree outside the databases. `leagueteamlinks` does not contain the live table.
+
+```ts
+import { readCareerData, rankStandings } from './api-eafc-files/dist/index.js';
+
+const career = await readCareerData('C:/saves/CmMgrC20261009');
+const table = rankStandings(career.standings, 1530);
+const nextMatches = career.fixtures.filter(fixture => !fixture.played);
+```
+
+See [career data](docs/career-data.md) for linking groups to `career_users.primarycompobjid`, the result contract, and the binary layout.
+
 ## Edit and write a file
 
 ```ts
@@ -177,6 +191,9 @@ The write example also accepts `--overwrite` and `--save-integrity invalidate|pr
 | `writeEaFile(sourcePath, outputPath, file, options?)` | `Promise<WriteFileResult>` | Serialize and publish a binary file |
 | `parseMetadataXml(xml)` | `MetadataSchema` | Parse custom descriptor XML |
 | `eaFileJsonChunks(file)` | `Generator<string>` | Generate compact JSON in chunks |
+| `readCareerData(path, options?)` | `Promise<CareerData>` | Read career competitions, standings, and fixtures |
+| `parseCareerData(bytes, options?)` | `CareerData` | Decode career sections without I/O |
+| `rankStandings(standings, groupId)` | `RankedStanding[]` | Rank one group by points, wins, goal difference, and goals |
 
 `ReadFileOptions` includes `version`, `database`, `metadata`, `tables`, `fileName`, `kind`, and `limits`. `version` and `metadata` are mutually exclusive. `database` requires `version`. `ReadTemplateOptions` requires `version`. `ParseOptions` accepts `metadata` without loading XML files.
 
@@ -212,6 +229,7 @@ Override limits with `limits: { maxTotalRecords: 2_000_000 }`. Values must be po
 - `src/domain/`: contracts, version catalog, errors, and decoding budgets.
 - `src/application/`: file reads and writes, template selection, decoding, and serialization.
 - `src/infrastructure/binary/`: databases, tables, fields, bits, Huffman coding, and CRCs.
+- `src/infrastructure/career/`: career sections, competition tree, standings, and fixtures.
 - `src/infrastructure/metadata/`: XML parsing and descriptor indexes.
 - `src/infrastructure/templates/`: bundled template path resolution.
 - `src/infrastructure/filesystem/`: read-only source access and atomic output publication.
@@ -220,4 +238,4 @@ Override limits with `limits: { maxTotalRecords: 2_000_000 }`. Values must be po
 
 The library has no mutable global state or external program dependency. TypeScript enables `strict`, `noUncheckedIndexedAccess`, and `exactOptionalPropertyTypes`. Development references: [TypeScript configuration](https://www.typescriptlang.org/tsconfig/noUncheckedIndexedAccess.html) and [Node.js test runner](https://nodejs.org/api/test.html).
 
-Further documentation: [writing](docs/writing.md), [JSON structure](docs/json-output.md), [binary format](docs/binary-format.md), [templates](templates/README.md), and [validation](docs/validation.md).
+Further documentation: [career data](docs/career-data.md), [writing](docs/writing.md), [JSON structure](docs/json-output.md), [binary format](docs/binary-format.md), [templates](templates/README.md), and [validation](docs/validation.md).
