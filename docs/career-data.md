@@ -102,7 +102,7 @@ Task action `7` fills the `target` group of a competition with `first` teams tak
 
 - `champion`, `promotion`, `promotionPlayoff`, `relegation` and `relegationPlayoff` come from keys 39–43, with `leagueId` set to the destination league for promotion and relegation.
 - `continental` zones come from action 7 tasks of the group's league, assigned to consecutive positions in task order. `entry` is 1 for the first group of a competition fed by the league, 2 for the next one, and so on.
-- When the group has colour keys 60–65, those positions are the zones and the tasks only name the competition. A colour that does not match a single competition keeps `competitionId: null`.
+- When the group has colour keys 60–65, those positions are the zones and the tasks only name the competition. The champion has its own colour, so champion positions covered by the same competition tasks are added to its zone. A colour that does not match a single competition keeps `competitionId: null`.
 - Leagues whose continental places depend on country coefficients (most European top flights) have no fill-by-position task, so only champion, promotion and relegation zones are returned.
 - Zones describe the rules, not the final outcome: cup winners and coefficients can change who actually qualifies.
 
