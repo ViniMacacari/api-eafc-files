@@ -83,6 +83,39 @@ export interface PlayerCompetitionStats {
   readonly recentMatches: readonly PlayerMatchEntry[];
 }
 
+export interface CompetitionSetting {
+  readonly competitionId: number;
+  readonly key: number;
+  readonly value: number;
+}
+
+export interface CompetitionTask {
+  readonly competitionId: number;
+  readonly action: number;
+  readonly target: number;
+  readonly source: number;
+  readonly parameter: number;
+  readonly first: number;
+  readonly second: number;
+}
+
+export type StandingZoneType =
+  | 'champion'
+  | 'promotion'
+  | 'promotionPlayoff'
+  | 'relegation'
+  | 'relegationPlayoff'
+  | 'continental';
+
+export interface StandingZone {
+  readonly type: StandingZoneType;
+  readonly positions: readonly number[];
+  readonly competitionId: number | null;
+  readonly targetGroupId: number | null;
+  readonly entry: number | null;
+  readonly leagueId: number | null;
+}
+
 export interface CareerData {
   readonly formatVersion: 1;
   readonly source: { readonly fileName: string | null; readonly byteLength: number };
@@ -91,6 +124,8 @@ export interface CareerData {
   readonly standings: readonly StandingEntry[];
   readonly fixtures: readonly Fixture[];
   readonly playerStats: readonly PlayerCompetitionStats[];
+  readonly settings: readonly CompetitionSetting[];
+  readonly tasks: readonly CompetitionTask[];
 }
 
 export interface CareerParseOptions {
