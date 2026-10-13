@@ -75,6 +75,7 @@ export function standingZones(career: CareerData, groupId: number): StandingZone
     .map((key) => sorted(groupSettings.filter((setting) => setting.key === key).map((setting) => setting.value)))
     .filter((positions) => positions.length > 0);
   if (colored.length === 0) return [...zones, ...continental];
+  const championPositions = zones.find((zone) => zone.type === 'champion')?.positions ?? [];
   return [
     ...zones,
     ...colored.map((positions) => {
@@ -82,9 +83,11 @@ export function standingZones(career: CareerData, groupId: number): StandingZone
       const competitionIds = new Set(covering.map((zone) => zone.competitionId));
       const covered = positions.every((position) => covering.some((zone) => zone.positions.includes(position)));
       const first = covering[0];
-      return competitionIds.size === 1 && covered && first !== undefined
-        ? { ...first, positions, entry: Math.min(...covering.map((zone) => zone.entry ?? 1)) }
-        : { type: 'continental' as const, positions, competitionId: null, targetGroupId: null, entry: null, leagueId: null };
+      if (competitionIds.size !== 1 || !covered || first === undefined) {
+        return { type: 'continental' as const, positions, competitionId: null, targetGroupId: null, entry: null, leagueId: null };
+      }
+      const champion = championPositions.filter((position) => covering.some((zone) => zone.positions.includes(position)));
+      return { ...first, positions: sorted([...champion, ...positions]), entry: Math.min(...covering.map((zone) => zone.entry ?? 1)) };
     }),
   ];
 }
