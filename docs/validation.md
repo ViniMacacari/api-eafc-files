@@ -2,7 +2,7 @@
 
 Integration tests use bundled `templates/` files without external paths. [validation.json](validation.json) records current SHA-256 checksums.
 
-On October 12, 2026, `npm run check` passed type checking, compilation, and **68 tests**, with no failures or skipped tests. Package inventory checks also confirmed inclusion of all local XML descriptors, databases, and executable examples.
+On October 12, 2026, `npm run check` passed type checking, compilation, and **71 tests**, with no failures or skipped tests. Package inventory checks also confirmed inclusion of all local XML descriptors, databases, and executable examples.
 
 | Version | Database | Bytes | Tables | Valid records |
 | --- | --- | ---: | ---: | ---: |
@@ -39,7 +39,7 @@ All databases were fully decoded using matching XML descriptors, with complete m
 - Invalid values, missing CRCs, zero-width records, cancellation flags, and combined decoding budgets.
 - Exclusive output creation, explicit overwrite, failed publication, and temporary-file cleanup.
 - Edited JSON import through the executable write example.
-- Career section discovery, competition trees, standings ranking, fixtures resolved through standing slots, bit-packed player statistics, and career limits.
+- Career section discovery, competition trees, standings ranking, fixtures resolved through standing slots, bit-packed player statistics, competition settings, season tasks, table zones, and career limits.
 
 All six bundled databases were edited and fully decoded again. Source template files remained byte-identical after these checks.
 
