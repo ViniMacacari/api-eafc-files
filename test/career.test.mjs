@@ -251,13 +251,10 @@ test('builds table zones from settings, names colored zones through season tasks
   assert.deepEqual(standingZones(career, 999), []);
 });
 
-test('uses task zones without colors and leaves contradicted colors unnamed', () => {
+test('returns continental zones only where the save colors them and leaves contradicted colors unnamed', () => {
   const career = parseCareerData(makeCareer());
   const withoutColors = { ...career, settings: career.settings.filter(item => item.key !== 60) };
-  assert.deepEqual(standingZones(withoutColors, 14).filter(zone => zone.type === 'continental'), [
-    { type: 'continental', positions: [1, 2], competitionId: 15, targetGroupId: 17, entry: 1, leagueId: null },
-    { type: 'continental', positions: [3], competitionId: 18, targetGroupId: 20, entry: 1, leagueId: null },
-  ]);
+  assert.deepEqual(standingZones(withoutColors, 14).filter(zone => zone.type === 'continental'), []);
   const contradicted = { ...career, settings: [...career.settings, { competitionId: 14, key: 61, value: 2 }, { competitionId: 14, key: 61, value: 3 }] };
   assert.deepEqual(standingZones(contradicted, 14).at(-1), {
     type: 'continental', positions: [2, 3], competitionId: null, targetGroupId: null, entry: null, leagueId: null,
