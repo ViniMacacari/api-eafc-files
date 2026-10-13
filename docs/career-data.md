@@ -101,9 +101,8 @@ Task action `7` fills the `target` group of a competition with `first` teams tak
 `standingZones(career, groupId)` combines both:
 
 - `champion`, `promotion`, `promotionPlayoff`, `relegation` and `relegationPlayoff` come from keys 39–43, with `leagueId` set to the destination league for promotion and relegation.
-- `continental` zones come from action 7 tasks of the group's league, assigned to consecutive positions in task order. `entry` is 1 for the first group of a competition fed by the league, 2 for the next one, and so on.
-- When the group has colour keys 60–65, those positions are the zones and the tasks only name the competition. The champion has its own colour, so champion positions covered by the same competition tasks are added to its zone. A colour that does not match a single competition keeps `competitionId: null`.
-- Leagues whose continental places depend on country coefficients (most European top flights) have no fill-by-position task, so only champion, promotion and relegation zones are returned.
+- `continental` zones are returned only when the group has colour keys 60–65. Those positions are the zones, and the action 7 tasks of the group's league, read as consecutive positions in task order, name the competition. `entry` is 1 for the first group of a competition fed by the league, 2 for the next one, and so on. The champion has its own colour, so champion positions covered by the same competition tasks are added to its zone. A colour that does not match a single competition keeps `competitionId: null`.
+- Without colour keys no continental zone is returned. European places are assigned at the end of the season by country coefficient rank (action 12, whose `source` is the rank, not a league) and by cup winners, and fill-by-position tasks then skip teams that already qualified, so their positions cannot be read from the save.
 - Zones describe the rules, not the final outcome: cup winners and coefficients can change who actually qualifies.
 
 ## Binary layout
