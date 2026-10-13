@@ -96,9 +96,9 @@ const data = parseEaFile(bytes, { metadata, fileName: 'file.squad' });
 
 For custom descriptors, use `parseMetadataXml(xml)` and pass the result as `metadata`, without `version`. External XML paths are not accepted by the file-reading API. Without `version` or `metadata`, records use short codes and raw integer values, accompanied by `MISSING_METADATA` warnings.
 
-## Read career standings, fixtures, and competitions
+## Read career standings, fixtures, competitions, and player statistics
 
-Career saves also keep the live league tables, the season schedule with results, and the competition tree outside the databases. `leagueteamlinks` does not contain the live table.
+Career saves also keep the live league tables, the season schedule with results, the competition tree, and season statistics for every player outside the databases. `leagueteamlinks` does not contain the live table and `teamplayerlinks` does not contain season statistics.
 
 ```ts
 import { readCareerData, rankStandings } from './api-eafc-files/dist/index.js';
@@ -106,6 +106,9 @@ import { readCareerData, rankStandings } from './api-eafc-files/dist/index.js';
 const career = await readCareerData('C:/saves/CmMgrC20261009');
 const table = rankStandings(career.standings, 1530);
 const nextMatches = career.fixtures.filter(fixture => !fixture.played);
+const topScorers = career.playerStats
+  .filter(stats => stats.competitionId === 1528)
+  .sort((a, b) => b.goals - a.goals);
 ```
 
 See [career data](docs/career-data.md) for linking groups to `career_users.primarycompobjid`, the result contract, and the binary layout.
@@ -191,7 +194,7 @@ The write example also accepts `--overwrite` and `--save-integrity invalidate|pr
 | `writeEaFile(sourcePath, outputPath, file, options?)` | `Promise<WriteFileResult>` | Serialize and publish a binary file |
 | `parseMetadataXml(xml)` | `MetadataSchema` | Parse custom descriptor XML |
 | `eaFileJsonChunks(file)` | `Generator<string>` | Generate compact JSON in chunks |
-| `readCareerData(path, options?)` | `Promise<CareerData>` | Read career competitions, standings, and fixtures |
+| `readCareerData(path, options?)` | `Promise<CareerData>` | Read career competitions, standings, fixtures, and player statistics |
 | `parseCareerData(bytes, options?)` | `CareerData` | Decode career sections without I/O |
 | `rankStandings(standings, groupId)` | `RankedStanding[]` | Rank one group by points, wins, goal difference, and goals |
 
@@ -229,7 +232,7 @@ Override limits with `limits: { maxTotalRecords: 2_000_000 }`. Values must be po
 - `src/domain/`: contracts, version catalog, errors, and decoding budgets.
 - `src/application/`: file reads and writes, template selection, decoding, and serialization.
 - `src/infrastructure/binary/`: databases, tables, fields, bits, Huffman coding, and CRCs.
-- `src/infrastructure/career/`: career sections, competition tree, standings, and fixtures.
+- `src/infrastructure/career/`: career sections, competition tree, standings, fixtures, and player statistics.
 - `src/infrastructure/metadata/`: XML parsing and descriptor indexes.
 - `src/infrastructure/templates/`: bundled template path resolution.
 - `src/infrastructure/filesystem/`: read-only source access and atomic output publication.
