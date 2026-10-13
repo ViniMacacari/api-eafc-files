@@ -69,12 +69,12 @@ export function standingZones(career: CareerData, groupId: number): StandingZone
         : type.startsWith('relegation') ? competitionSetting(relegationLeagueKey) : null,
     });
   }
-  const leagueId = competitionSetting(leagueKey);
-  const continental = leagueId === null ? [] : continentalZones(career, leagueId, groupSize);
   const colored = continentalColorKeys
     .map((key) => sorted(groupSettings.filter((setting) => setting.key === key).map((setting) => setting.value)))
     .filter((positions) => positions.length > 0);
-  if (colored.length === 0) return [...zones, ...continental];
+  if (colored.length === 0) return zones;
+  const leagueId = competitionSetting(leagueKey);
+  const continental = leagueId === null ? [] : continentalZones(career, leagueId, groupSize);
   const championPositions = zones.find((zone) => zone.type === 'champion')?.positions ?? [];
   return [
     ...zones,
