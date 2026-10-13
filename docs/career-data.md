@@ -72,7 +72,7 @@ One entry per player, team and competition for the current season, for every tea
 
 - `appearances`, `minutes`, `goals`, `assists`, `yellowCards`, `redCards` and `manOfTheMatch` are totals for that competition.
 - `cleanSheets` and `goalsConceded` count matches and goals while the player was on the pitch; for goalkeepers they match the team totals.
-- `saves` is only filled for goalkeepers.
+- `saves` is only filled for goalkeepers. The game counts saves in full only in matches the user plays; matches simulated between CPU teams add very few, so CPU goalkeepers show low totals.
 - `ratingTotal` is the sum of match ratings in tenths; `averageRating` is `ratingTotal / appearances / 10`, rounded to two decimals, or `null` without appearances.
 - `recentMatches` holds up to the last five matches of the team in that competition, oldest first. `played` is `false` when the player was not used. `rating` is `null` in that case. `position` uses the 0–29 position ids of `players.preferredposition1`.
 - Player goals include extra time, while fixture scores do not. In knockout matches decided after 90 minutes, the sum of player goals can exceed the fixture score. In league competitions they match.
