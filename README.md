@@ -96,15 +96,16 @@ const data = parseEaFile(bytes, { metadata, fileName: 'file.squad' });
 
 For custom descriptors, use `parseMetadataXml(xml)` and pass the result as `metadata`, without `version`. External XML paths are not accepted by the file-reading API. Without `version` or `metadata`, records use short codes and raw integer values, accompanied by `MISSING_METADATA` warnings.
 
-## Read career standings, fixtures, competitions, and player statistics
+## Read career standings, table zones, fixtures, competitions, and player statistics
 
 Career saves also keep the live league tables, the season schedule with results, the competition tree, and season statistics for every player outside the databases. `leagueteamlinks` does not contain the live table and `teamplayerlinks` does not contain season statistics.
 
 ```ts
-import { readCareerData, rankStandings } from './api-eafc-files/dist/index.js';
+import { readCareerData, rankStandings, standingZones } from './api-eafc-files/dist/index.js';
 
 const career = await readCareerData('C:/saves/CmMgrC20261009');
 const table = rankStandings(career.standings, 1530);
+const zones = standingZones(career, 1530);
 const nextMatches = career.fixtures.filter(fixture => !fixture.played);
 const topScorers = career.playerStats
   .filter(stats => stats.competitionId === 1528)
@@ -197,6 +198,7 @@ The write example also accepts `--overwrite` and `--save-integrity invalidate|pr
 | `readCareerData(path, options?)` | `Promise<CareerData>` | Read career competitions, standings, fixtures, and player statistics |
 | `parseCareerData(bytes, options?)` | `CareerData` | Decode career sections without I/O |
 | `rankStandings(standings, groupId)` | `RankedStanding[]` | Rank one group by points, wins, goal difference, and goals |
+| `standingZones(career, groupId)` | `StandingZone[]` | Champion, promotion, relegation, and continental places of one group |
 
 `ReadFileOptions` includes `version`, `database`, `metadata`, `tables`, `fileName`, `kind`, and `limits`. `version` and `metadata` are mutually exclusive. `database` requires `version`. `ReadTemplateOptions` requires `version`. `ParseOptions` accepts `metadata` without loading XML files.
 
