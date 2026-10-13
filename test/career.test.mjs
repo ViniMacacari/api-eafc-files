@@ -240,12 +240,12 @@ test('decodes competition settings and season tasks', () => {
   assert.equal(tasks.length, 3);
 });
 
-test('builds table zones from settings and names colored zones through season tasks', () => {
+test('builds table zones from settings, names colored zones through season tasks and keeps the champion place', () => {
   const career = parseCareerData(makeCareer());
   assert.deepEqual(standingZones(career, 14), [
     { type: 'champion', positions: [1], competitionId: null, targetGroupId: null, entry: null, leagueId: null },
     { type: 'relegation', positions: [3], competitionId: null, targetGroupId: null, entry: null, leagueId: 83 },
-    { type: 'continental', positions: [2], competitionId: 15, targetGroupId: 17, entry: 1, leagueId: null },
+    { type: 'continental', positions: [1, 2], competitionId: 15, targetGroupId: 17, entry: 1, leagueId: null },
   ]);
   assert.deepEqual(standingZones(career, 13), []);
   assert.deepEqual(standingZones(career, 999), []);
