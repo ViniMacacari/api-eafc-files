@@ -16,6 +16,13 @@ function section(name, body) {
   return Buffer.concat([header, body]);
 }
 
+function marker(name, body) {
+  const header = Buffer.alloc(4 + name.length);
+  header.writeUInt32LE(name.length, 0);
+  header.write(name, 4, 'latin1');
+  return Buffer.concat([header, body]);
+}
+
 function competition(id, level, parent, codeText, key) {
   const record = Buffer.alloc(49);
   record.set([0xff, 0x01]);
@@ -41,6 +48,43 @@ function fixture(index, competitionId, round, date, time, home, away, played) {
   record.writeUInt16LE(home[0], 13); record[15] = home[1]; record[16] = 0xff;
   record.writeUInt16LE(away[0], 17); record[19] = away[1]; record[20] = 0xff;
   record[21] = played ? 1 : 0;
+  return record;
+}
+
+function setBits(bytes, offset, width, value) {
+  for (let bit = 0; bit < width; bit++) {
+    const position = offset + bit;
+    if (Math.floor(value / 2 ** bit) % 2 === 1) bytes[position >> 3] |= 1 << (position & 7);
+  }
+}
+
+function statsRecord({ team = 0, player = 0, competition = 0, totals = {}, entries = [] } = {}) {
+  const record = Buffer.alloc(73);
+  record.set([0x01, 0x01]);
+  if (player > 0) {
+    setBits(record, 16, 18, team + 1);
+    setBits(record, 34, 19, player + 1);
+    setBits(record, 53, 11, competition);
+  }
+  const layout = {
+    minutes: [69, 15], ratingTotal: [84, 12], goals: [108, 9], yellowCards: [117, 7], redCards: [124, 6], appearances: [130, 8],
+    assists: [138, 8], manOfTheMatch: [146, 8], saves: [154, 8], goalsConceded: [162, 8], cleanSheets: [170, 6],
+  };
+  for (const [field, value] of Object.entries(totals)) setBits(record, ...layout[field], value);
+  for (const [slot, entry] of entries.entries()) {
+    const offset = (22 + slot * 10) * 8;
+    if (!entry) {
+      record[22 + slot * 10] = 0x04;
+      continue;
+    }
+    setBits(record, offset, 3, 0);
+    setBits(record, offset + 3, 25, entry.date);
+    setBits(record, offset + 32, 1, 1);
+    setBits(record, offset + 35, 7, entry.minutes);
+    setBits(record, offset + 42, 7, entry.rating);
+    setBits(record, offset + 50, 3, entry.goals);
+    setBits(record, offset + 64, 6, entry.position + 1);
+  }
   return record;
 }
 
@@ -70,13 +114,23 @@ export function makeCareer() {
     section('teams', Buffer.concat([Buffer.from([0xff, 0x01, 0, 0]), fixtures])),
     section('fixture', Buffer.alloc(4)),
     section('stagadv', Buffer.concat([Buffer.alloc(3), standings])),
-    section('stndgs', Buffer.alloc(4)),
+    marker('stndgs', Buffer.concat([
+      statsRecord({
+        team: 100, player: 240332, competition: 12,
+        totals: { appearances: 2, minutes: 150, ratingTotal: 152, goals: 13, assists: 7, yellowCards: 1, redCards: 1, manOfTheMatch: 1,
+          cleanSheets: 1, goalsConceded: 3 },
+        entries: [{ date: 20280202, minutes: 0, rating: 0, goals: 0, position: 25 }, { date: 20280126, minutes: 90, rating: 82, goals: 3, position: 25 }, null],
+      }),
+      statsRecord(),
+      statsRecord({ team: 300, player: 263821, competition: 12, totals: { appearances: 1, minutes: 90, ratingTotal: 64, saves: 7, goalsConceded: 3 } }),
+    ])),
+    section('stats', Buffer.alloc(4)),
   ]);
 }
 
 test('locates named career sections', () => {
   const career = parseCareerData(makeCareer());
-  assert.deepEqual(career.sections.map(item => item.name), ['version', 'compavg', 'compobj', 'teams', 'fixture', 'stagadv', 'stndgs']);
+  assert.deepEqual(career.sections.map(item => item.name), ['version', 'compavg', 'compobj', 'teams', 'fixture', 'stagadv', 'stndgs', 'stats']);
   assert.equal(career.formatVersion, 1);
   assert.equal(career.source.fileName, null);
 });
@@ -120,6 +174,22 @@ test('decodes played and scheduled fixtures through standing slots', () => {
   assert.equal(fixtures[1].played, false);
   assert.equal(fixtures[1].home.goals, null);
   assert.equal(fixtures[1].away.teamId, 100);
+});
+
+test('decodes player statistics per competition', () => {
+  const { playerStats } = parseCareerData(makeCareer());
+  assert.equal(playerStats.length, 2);
+  assert.deepEqual(playerStats[0], {
+    index: 0, playerId: 240332, teamId: 100, competitionId: 12,
+    appearances: 2, minutes: 150, goals: 13, assists: 7, yellowCards: 1, redCards: 1, manOfTheMatch: 1,
+    cleanSheets: 1, goalsConceded: 3, saves: 0, ratingTotal: 152, averageRating: 7.6,
+    recentMatches: [
+      { date: 20280126, played: true, minutes: 90, rating: 8.2, goals: 3, position: 25 },
+      { date: 20280202, played: false, minutes: 0, rating: null, goals: 0, position: 25 },
+    ],
+  });
+  assert.deepEqual([playerStats[1].index, playerStats[1].playerId, playerStats[1].saves, playerStats[1].averageRating, playerStats[1].recentMatches],
+    [2, 263821, 7, 6.4, []]);
 });
 
 test('rejects files without career sections and enforces limits', () => {

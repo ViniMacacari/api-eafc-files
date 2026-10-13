@@ -67,7 +67,7 @@ The tree is limited to 256 nodes and checked for cycles and invalid child refere
 - Unwritten slots and cancelled records are omitted.
 - Missing descriptors produce short codes and raw integer values with warnings.
 - Reading exposes CRCs without validating them. Writing recalculates database and table CRCs for changed databases.
-- Areas outside DB databases are not interpreted by `readEaFile`. Career competitions, standings, and fixtures are decoded separately by `readCareerData`; see [career data](career-data.md).
+- Areas outside DB databases are not interpreted by `readEaFile`. Career competitions, standings, fixtures, and player statistics are decoded separately by `readCareerData`; see [career data](career-data.md).
 - Encrypted or externally compressed containers are not decoded.
 - Table filtering validates the directory and decodes selected tables only.
 - `source.kind` classifies filenames; it does not reliably detect game mode or version.

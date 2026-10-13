@@ -54,6 +54,35 @@ export interface Fixture {
   readonly away: FixtureSide;
 }
 
+export interface PlayerMatchEntry {
+  readonly date: number;
+  readonly played: boolean;
+  readonly minutes: number;
+  readonly rating: number | null;
+  readonly goals: number;
+  readonly position: number | null;
+}
+
+export interface PlayerCompetitionStats {
+  readonly index: number;
+  readonly playerId: number;
+  readonly teamId: number;
+  readonly competitionId: number;
+  readonly appearances: number;
+  readonly minutes: number;
+  readonly goals: number;
+  readonly assists: number;
+  readonly yellowCards: number;
+  readonly redCards: number;
+  readonly manOfTheMatch: number;
+  readonly cleanSheets: number;
+  readonly goalsConceded: number;
+  readonly saves: number;
+  readonly ratingTotal: number;
+  readonly averageRating: number | null;
+  readonly recentMatches: readonly PlayerMatchEntry[];
+}
+
 export interface CareerData {
   readonly formatVersion: 1;
   readonly source: { readonly fileName: string | null; readonly byteLength: number };
@@ -61,6 +90,7 @@ export interface CareerData {
   readonly competitions: readonly CompetitionNode[];
   readonly standings: readonly StandingEntry[];
   readonly fixtures: readonly Fixture[];
+  readonly playerStats: readonly PlayerCompetitionStats[];
 }
 
 export interface CareerParseOptions {
