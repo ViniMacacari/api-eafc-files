@@ -4,7 +4,10 @@ import { resolveLimits } from '../domain/limits.js';
 import { findCareerSections, sectionBounds } from '../infrastructure/career/career-sections.js';
 import { parseCompetitions } from '../infrastructure/career/competition-parser.js';
 import { parseFixtures } from '../infrastructure/career/fixture-parser.js';
+import { parsePlayerStats } from '../infrastructure/career/player-stats-parser.js';
 import { parseStandings } from '../infrastructure/career/standings-parser.js';
+
+const statsMarker = 'stndgs';
 
 export function parseCareerData(bytes: Uint8Array, options: CareerParseOptions = {}): CareerData {
   const limits = resolveLimits(options.limits);
@@ -20,7 +23,10 @@ export function parseCareerData(bytes: Uint8Array, options: CareerParseOptions =
   const fixtureSection = sectionBounds(sections, 'teams');
   const fixtures = fixtureSection === undefined ? [] :
     parseFixtures(bytes, fixtureSection.start, fixtureSection.end, standings, new Set(competitions.map((node) => node.id)));
-  if (competitions.length + standings.length + fixtures.length > limits.maxTotalRecords) {
+  const statsSection = sectionBounds(sections, statsMarker);
+  const playerStats = statsSection === undefined ? [] :
+    parsePlayerStats(bytes, statsSection.start + 4 + statsMarker.length, statsSection.end);
+  if (competitions.length + standings.length + fixtures.length + playerStats.length > limits.maxTotalRecords) {
     throw new EaFileError('LIMIT_EXCEEDED', 'Decoded record or value limit exceeded.');
   }
   return {
@@ -30,5 +36,6 @@ export function parseCareerData(bytes: Uint8Array, options: CareerParseOptions =
     competitions,
     standings,
     fixtures,
+    playerStats,
   };
 }
