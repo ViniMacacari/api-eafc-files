@@ -7,8 +7,10 @@ export { parseCareerData } from './application/parse-career-data.js';
 export { readCareerData } from './application/read-career-data.js';
 export { rankStandings } from './application/rank-standings.js';
 export type { RankedStanding } from './application/rank-standings.js';
-export type { CareerData, CareerParseOptions, CareerSection, CompetitionLevel, CompetitionNode, Fixture, FixtureSide,
-  PlayerCompetitionStats, PlayerMatchEntry, StandingEntry, StandingSplit } from './domain/career-models.js';
+export { standingZones } from './application/standing-zones.js';
+export type { CareerData, CareerParseOptions, CareerSection, CompetitionLevel, CompetitionNode, CompetitionSetting,
+  CompetitionTask, Fixture, FixtureSide, PlayerCompetitionStats, PlayerMatchEntry, StandingEntry, StandingSplit,
+  StandingZone, StandingZoneType } from './domain/career-models.js';
 export { loadTemplateMetadata } from './application/load-template-metadata.js';
 export { SUPPORTED_VERSIONS, TEMPLATE_DATABASES } from './domain/templates.js';
 export type { EaFcVersion, TemplateDatabase } from './domain/templates.js';
