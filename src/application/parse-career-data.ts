@@ -1,13 +1,17 @@
-import type { CareerData, CareerParseOptions } from '../domain/career-models.js';
+import type { CareerData, CareerParseOptions, CareerSection } from '../domain/career-models.js';
 import { EaFileError } from '../domain/errors.js';
 import { resolveLimits } from '../domain/limits.js';
 import { findCareerSections, sectionBounds } from '../infrastructure/career/career-sections.js';
+import { parseCompetitionSettings, parseCompetitionTasks } from '../infrastructure/career/competition-rules-parser.js';
 import { parseCompetitions } from '../infrastructure/career/competition-parser.js';
 import { parseFixtures } from '../infrastructure/career/fixture-parser.js';
 import { parsePlayerStats } from '../infrastructure/career/player-stats-parser.js';
 import { parseStandings } from '../infrastructure/career/standings-parser.js';
 
-const statsMarker = 'stndgs';
+function blockAfter(sections: readonly CareerSection[], tag: string): { start: number; end: number } | undefined {
+  const bounds = sectionBounds(sections, tag);
+  return bounds === undefined ? undefined : { start: bounds.start + 4 + tag.length, end: bounds.end };
+}
 
 export function parseCareerData(bytes: Uint8Array, options: CareerParseOptions = {}): CareerData {
   const limits = resolveLimits(options.limits);
@@ -23,10 +27,14 @@ export function parseCareerData(bytes: Uint8Array, options: CareerParseOptions =
   const fixtureSection = sectionBounds(sections, 'teams');
   const fixtures = fixtureSection === undefined ? [] :
     parseFixtures(bytes, fixtureSection.start, fixtureSection.end, standings, new Set(competitions.map((node) => node.id)));
-  const statsSection = sectionBounds(sections, statsMarker);
-  const playerStats = statsSection === undefined ? [] :
-    parsePlayerStats(bytes, statsSection.start + 4 + statsMarker.length, statsSection.end);
-  if (competitions.length + standings.length + fixtures.length + playerStats.length > limits.maxTotalRecords) {
+  const statsBlock = blockAfter(sections, 'stndgs');
+  const playerStats = statsBlock === undefined ? [] : parsePlayerStats(bytes, statsBlock.start, statsBlock.end);
+  const settingsBlock = blockAfter(sections, 'script');
+  const settings = settingsBlock === undefined ? [] : parseCompetitionSettings(bytes, settingsBlock.start, settingsBlock.end);
+  const tasksBlock = blockAfter(sections, 'sched');
+  const tasks = tasksBlock === undefined ? [] : parseCompetitionTasks(bytes, tasksBlock.start, tasksBlock.end);
+  const records = competitions.length + standings.length + fixtures.length + playerStats.length + settings.length + tasks.length;
+  if (records > limits.maxTotalRecords) {
     throw new EaFileError('LIMIT_EXCEEDED', 'Decoded record or value limit exceeded.');
   }
   return {
@@ -37,5 +45,7 @@ export function parseCareerData(bytes: Uint8Array, options: CareerParseOptions =
     standings,
     fixtures,
     playerStats,
+    settings,
+    tasks,
   };
 }

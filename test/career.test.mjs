@@ -3,7 +3,7 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { EaFileError, parseCareerData, rankStandings, readCareerData } from '../dist/index.js';
+import { EaFileError, parseCareerData, rankStandings, readCareerData, standingZones } from '../dist/index.js';
 import { makeDatabase, makeSave } from './fixtures.mjs';
 
 const code = expected => error => error instanceof EaFileError && error.code === expected;
@@ -88,6 +88,24 @@ function statsRecord({ team = 0, player = 0, competition = 0, totals = {}, entri
   return record;
 }
 
+function setting(competitionId, key, value) {
+  const record = Buffer.alloc(9);
+  record[0] = 0x01;
+  record.writeUInt16LE(competitionId, 1); record[3] = key; record.writeInt32LE(value, 4);
+  record[8] = 0xff;
+  return record;
+}
+
+function task(competitionId, action, target, source, first, second = 0) {
+  const record = Buffer.alloc(19);
+  record[0] = 0x01;
+  record.writeUInt16LE(competitionId, 1); record[3] = action;
+  record.writeUInt16LE(target, 4); record.writeUInt16LE(source, 6);
+  record.writeInt32LE(first, 10); record.writeInt32LE(second, 14);
+  record[18] = 0xff;
+  return record;
+}
+
 export function makeCareer() {
   const competitions = Buffer.concat([
     competition(10, 1, 0, 'CONF', 'Confederation'),
@@ -95,6 +113,24 @@ export function makeCareer() {
     competition(12, 3, 11, 'C80', 'TrophyName_Abbr15_80'),
     competition(13, 4, 12, 'S1', 'FCE_League_Stage'),
     competition(14, 5, 13, 'G1', ''),
+    competition(15, 3, 10, 'C1003', 'TrophyName_Abbr15_1003'),
+    competition(16, 4, 15, 'S1', 'FCE_Setup_Stage'),
+    competition(17, 5, 16, 'G1', ''),
+    competition(18, 3, 10, 'C1014', 'TrophyName_Abbr15_1014'),
+    competition(19, 4, 18, 'S1', 'FCE_Setup_Stage'),
+    competition(20, 5, 19, 'G1', ''),
+  ]);
+  const tasks = Buffer.concat([
+    task(12, 0, 14, 80, 0),
+    task(15, 7, 17, 80, 2, 9),
+    task(18, 7, 20, 80, 1, 8),
+  ]);
+  const settings = Buffer.concat([
+    setting(12, 117, 80),
+    setting(12, 38, 83),
+    setting(14, 39, 1),
+    setting(14, 60, 2),
+    setting(14, 42, 3),
   ]);
   const standings = Buffer.concat([
     standing(1, 14, 100, 0, [1, 0, 0, 3, 1], [0, 1, 0, 1, 1], 4),
@@ -113,6 +149,9 @@ export function makeCareer() {
     section('compobj', Buffer.alloc(4)),
     section('teams', Buffer.concat([Buffer.from([0xff, 0x01, 0, 0]), fixtures])),
     section('fixture', Buffer.alloc(4)),
+    marker('sched', tasks),
+    marker('script', settings),
+    section('setting', Buffer.alloc(4)),
     section('stagadv', Buffer.concat([Buffer.alloc(3), standings])),
     marker('stndgs', Buffer.concat([
       statsRecord({
@@ -130,16 +169,17 @@ export function makeCareer() {
 
 test('locates named career sections', () => {
   const career = parseCareerData(makeCareer());
-  assert.deepEqual(career.sections.map(item => item.name), ['version', 'compavg', 'compobj', 'teams', 'fixture', 'stagadv', 'stndgs', 'stats']);
+  assert.deepEqual(career.sections.map(item => item.name), ['version', 'compavg', 'compobj', 'teams', 'fixture', 'sched', 'script', 'setting', 'stagadv', 'stndgs', 'stats']);
   assert.equal(career.formatVersion, 1);
   assert.equal(career.source.fileName, null);
 });
 
 test('decodes the competition tree', () => {
   const { competitions } = parseCareerData(makeCareer());
-  assert.deepEqual(competitions.map(node => [node.id, node.level, node.parentId]), [
+  assert.deepEqual(competitions.slice(0, 5).map(node => [node.id, node.level, node.parentId]), [
     [10, 'confederation', null], [11, 'nation', 10], [12, 'competition', 11], [13, 'stage', 12], [14, 'group', 13],
   ]);
+  assert.equal(competitions.length, 11);
   assert.deepEqual(competitions[2], { id: 12, parentId: 11, level: 'competition', levelCode: 3, code: 'C80', nameKey: 'TrophyName_Abbr15_80' });
 });
 
@@ -190,6 +230,35 @@ test('decodes player statistics per competition', () => {
   });
   assert.deepEqual([playerStats[1].index, playerStats[1].playerId, playerStats[1].saves, playerStats[1].averageRating, playerStats[1].recentMatches],
     [2, 263821, 7, 6.4, []]);
+});
+
+test('decodes competition settings and season tasks', () => {
+  const { settings, tasks } = parseCareerData(makeCareer());
+  assert.deepEqual(settings[0], { competitionId: 12, key: 117, value: 80 });
+  assert.equal(settings.length, 5);
+  assert.deepEqual(tasks[1], { competitionId: 15, action: 7, target: 17, source: 80, parameter: 0, first: 2, second: 9 });
+  assert.equal(tasks.length, 3);
+});
+
+test('builds table zones from settings, names colored zones through season tasks and keeps the champion place', () => {
+  const career = parseCareerData(makeCareer());
+  assert.deepEqual(standingZones(career, 14), [
+    { type: 'champion', positions: [1], competitionId: null, targetGroupId: null, entry: null, leagueId: null },
+    { type: 'relegation', positions: [3], competitionId: null, targetGroupId: null, entry: null, leagueId: 83 },
+    { type: 'continental', positions: [1, 2], competitionId: 15, targetGroupId: 17, entry: 1, leagueId: null },
+  ]);
+  assert.deepEqual(standingZones(career, 13), []);
+  assert.deepEqual(standingZones(career, 999), []);
+});
+
+test('returns continental zones only where the save colors them and leaves contradicted colors unnamed', () => {
+  const career = parseCareerData(makeCareer());
+  const withoutColors = { ...career, settings: career.settings.filter(item => item.key !== 60) };
+  assert.deepEqual(standingZones(withoutColors, 14).filter(zone => zone.type === 'continental'), []);
+  const contradicted = { ...career, settings: [...career.settings, { competitionId: 14, key: 61, value: 2 }, { competitionId: 14, key: 61, value: 3 }] };
+  assert.deepEqual(standingZones(contradicted, 14).at(-1), {
+    type: 'continental', positions: [2, 3], competitionId: null, targetGroupId: null, entry: null, leagueId: null,
+  });
 });
 
 test('rejects files without career sections and enforces limits', () => {
